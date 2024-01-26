@@ -146,7 +146,7 @@ def main():
             load_in_4bit=quantization_config.load_in_4bit,
             load_in_8bit=quantization_config.load_in_8bit,
             # token=secret_hf,  # use one if using gated models like meta-llama/Llama-2-7b-hf
-            device_map={'':torch.cuda.current_device()}
+            device_map={"": torch.cuda.current_device()},
         )
         model = FastLanguageModel.get_peft_model(
             model,
@@ -206,6 +206,19 @@ def main():
             peft_config=get_peft_config(model_args),
         )
 
+    try:
+        import wandb
+
+        run = wandb.init(
+            project="Ghost 7B alpha ft - v0.9.0",
+            job_type="training",
+            anonymous="allow",
+            # id="2yvgg72o"
+        )
+    except Exception as error:
+        print(error)
+        run = None
+
     ###############
     # Training loop
     ###############
@@ -257,6 +270,9 @@ def main():
     if training_args.push_to_hub is True:
         logger.info("Pushing to hub...")
         trainer.push_to_hub(**kwargs)
+
+    if run is not None:
+        run.finish()
 
     logger.info("*** Training complete ***")
 
