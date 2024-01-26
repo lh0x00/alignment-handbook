@@ -108,16 +108,22 @@ def main():
     train_dataset = raw_datasets["train"]
     eval_dataset = raw_datasets["test"]
 
-    with training_args.main_process_first(desc="Log a few random samples from the processed training set"):
+    with training_args.main_process_first(
+        desc="Log a few random samples from the processed training set"
+    ):
         for index in random.sample(range(len(raw_datasets["train"])), 3):
-            logger.info(f"Sample {index} of the processed training set:\n\n{raw_datasets['train'][index]['text']}")
+            logger.info(
+                f"Sample {index} of the processed training set:\n\n{raw_datasets['train'][index]['text']}"
+            )
 
     #######################
     # Load pretrained model
     #######################
     logger.info("*** Load pretrained model ***")
     torch_dtype = (
-        model_args.torch_dtype if model_args.torch_dtype in ["auto", None] else getattr(torch, model_args.torch_dtype)
+        model_args.torch_dtype
+        if model_args.torch_dtype in ["auto", None]
+        else getattr(torch, model_args.torch_dtype)
     )
     quantization_config = get_quantization_config(model_args)
 
@@ -144,7 +150,7 @@ def main():
         dataset_text_field="text",
         max_seq_length=training_args.max_seq_length,
         tokenizer=tokenizer,
-        packing=True,
+        packing=data_args.packing,
         peft_config=get_peft_config(model_args),
     )
 
