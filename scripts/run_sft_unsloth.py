@@ -170,9 +170,9 @@ def main():
         tokenizer.padding_side = "right"
         tokenizer.pad_token = tokenizer.eos_token
         print(tokenizer.add_bos_token, tokenizer.add_eos_token)
-        
+
         logger.info("*** Model loaded! ***")
-        
+
         ########################
         # Initialize the Trainer
         ########################
@@ -237,6 +237,8 @@ def main():
     logger.info("*** Save model ***")
     trainer.save_model(training_args.output_dir)
     logger.info(f"Model saved to {training_args.output_dir}")
+
+    data_args.dataset_mixer = data_args.dataset_mixer or {"lamhieu/math_dialogue_v1": 1}
 
     # Save everything else on main process
     kwargs = {
