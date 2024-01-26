@@ -212,7 +212,7 @@ class DataArguments:
         default=None, metadata={"help": "The chat template to use."}
     )
     dataset_mixer: Optional[Dict[str, float]] = field(
-        default=None,
+        default={"lamhieu/math_dialogue_v1":1},
         metadata={
             "help": ("Datasets and their proportions to be used for training ift/rl.")
         },
