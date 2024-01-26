@@ -146,6 +146,7 @@ def main():
             load_in_4bit=quantization_config.load_in_4bit,
             load_in_8bit=quantization_config.load_in_8bit,
             # token=secret_hf,  # use one if using gated models like meta-llama/Llama-2-7b-hf
+            device_map={'':torch.cuda.current_device()}
         )
         model = FastLanguageModel.get_peft_model(
             model,
