@@ -206,18 +206,17 @@ def main():
             peft_config=get_peft_config(model_args),
         )
 
-    try:
-        import wandb
-
-        run = wandb.init(
-            project="Ghost 7B alpha ft - v0.9.0",
-            job_type="training",
-            anonymous="allow",
-            # id="2yvgg72o"
-        )
-    except Exception as error:
-        print(error)
-        run = None
+    # try:
+    #     import wandb
+    #     run = wandb.init(
+    #         # project="Ghost 7B alpha ft - v0.9.0",
+    #         job_type="training",
+    #         anonymous="allow",
+    #         # id="2yvgg72o"
+    #     )
+    # except Exception as error:
+    #     print(error)
+    #     run = None
 
     ###############
     # Training loop
@@ -271,8 +270,8 @@ def main():
         logger.info("Pushing to hub...")
         trainer.push_to_hub(**kwargs)
 
-    if run is not None:
-        run.finish()
+    # if run is not None:
+    #     run.finish()
 
     logger.info("*** Training complete ***")
 
