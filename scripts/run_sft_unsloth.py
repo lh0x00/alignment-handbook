@@ -251,7 +251,7 @@ def main():
     trainer.save_model(training_args.output_dir)
     logger.info(f"Model saved to {training_args.output_dir}")
 
-    data_args.dataset_mixer = data_args.dataset_mixer or {"lamhieu/math_dialogue_v1": 1}
+    data_args.dataset_mixer = data_args.dataset_mixer or {"lamhieu/ultra_dialogue_v1": 1}
 
     # Save everything else on main process
     kwargs = {
