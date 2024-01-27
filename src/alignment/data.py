@@ -80,7 +80,7 @@ def apply_chat_template(
 def get_datasets(
     data_config: DataArguments | dict,
     splits: List[str] = ["train", "test"],
-    shuffle: bool = True,
+    shuffle: bool = False,
 ) -> DatasetDict:
     """
     Loads one or more datasets with varying training set proportions.
@@ -119,7 +119,7 @@ def get_datasets(
     return raw_datasets
 
 
-def mix_datasets(dataset_mixer: dict, splits: Optional[List[str]] = None, shuffle=True) -> DatasetDict:
+def mix_datasets(dataset_mixer: dict, splits: Optional[List[str]] = None, shuffle=False) -> DatasetDict:
     """
     Loads and mixes datasets according to proportions specified in `dataset_mixer`.
 
