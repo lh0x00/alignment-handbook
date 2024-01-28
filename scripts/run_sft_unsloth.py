@@ -85,7 +85,9 @@ def main():
     ###############
     # Load datasets
     ###############
-    raw_datasets = get_datasets(data_args, splits=data_args.dataset_splits, shuffle=False)
+    raw_datasets = get_datasets(
+        data_args, splits=data_args.dataset_splits, shuffle=False
+    )
     logger.info(
         f"Training on the following datasets and their proportions: {[split + ' : ' + str(dset.num_rows) for split, dset in raw_datasets.items()]}"
     )
@@ -138,7 +140,7 @@ def main():
         quantization_config=quantization_config,
     )
 
-    if quantization_config is not None:
+    if model_args.patch_unsloth is True:
         model, tokenizer = FastLanguageModel.from_pretrained(
             model_name=model_args.model_name_or_path,  # "unsloth/mistral-7b" for 16bit loading
             max_seq_length=training_args.max_seq_length,
@@ -151,15 +153,16 @@ def main():
         model = FastLanguageModel.get_peft_model(
             model,
             r=model_args.lora_r,  # Choose any number > 0 ! Suggested 8, 16, 32, 64, 128
-            target_modules=[
-                "q_proj",
-                "k_proj",
-                "v_proj",
-                "o_proj",
-                "gate_proj",
-                "up_proj",
-                "down_proj",
-            ],
+            target_modules=model_args.lora_target_modules,
+            # target_modules=[
+            #     "q_proj",
+            #     "k_proj",
+            #     "v_proj",
+            #     "o_proj",
+            #     "gate_proj",
+            #     "up_proj",
+            #     "down_proj",
+            # ],
             lora_alpha=model_args.lora_alpha,
             lora_dropout=model_args.lora_dropout,  # Supports any, but = 0 is optimized
             bias="none",  # Supports any, but = "none" is optimized
@@ -173,20 +176,6 @@ def main():
         print(tokenizer.add_bos_token, tokenizer.add_eos_token)
 
         logger.info("*** Model loaded! ***")
-
-        ########################
-        # Initialize the Trainer
-        ########################
-        trainer = SFTTrainer(
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
-            dataset_text_field="text",
-            max_seq_length=training_args.max_seq_length,
-            tokenizer=tokenizer,
-            packing=data_args.packing,
-        )
     else:
         logger.info("*** Model loaded! ***")
 
@@ -205,6 +194,20 @@ def main():
             packing=data_args.packing,
             peft_config=get_peft_config(model_args),
         )
+
+    ########################
+    # Initialize the Trainer
+    ########################
+    trainer = SFTTrainer(
+        model=model,
+        args=training_args,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
+        dataset_text_field="text",
+        max_seq_length=training_args.max_seq_length,
+        tokenizer=tokenizer,
+        packing=data_args.packing,
+    )
 
     # try:
     #     import wandb
@@ -251,7 +254,9 @@ def main():
     trainer.save_model(training_args.output_dir)
     logger.info(f"Model saved to {training_args.output_dir}")
 
-    data_args.dataset_mixer = data_args.dataset_mixer or {"lamhieu/ultra_dialogue_v1": 1}
+    data_args.dataset_mixer = data_args.dataset_mixer or {
+        "lamhieu/ultra_dialogue_v1": 1
+    }
 
     # Save everything else on main process
     kwargs = {

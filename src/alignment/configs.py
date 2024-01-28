@@ -197,6 +197,11 @@ class ModelArguments:
         default=False, metadata={"help": "use nested quantization"}
     )
 
+    patch_unsloth: bool = field(
+        default=False,
+        metadata={"help": ("Apply unsloth patchs for model.")},
+    )
+
     def __post_init__(self):
         if self.load_in_8bit and self.load_in_4bit:
             raise ValueError("You can't use 8 bit and 4 bit precision at the same time")
