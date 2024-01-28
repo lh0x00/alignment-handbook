@@ -176,6 +176,20 @@ def main():
         print(tokenizer.add_bos_token, tokenizer.add_eos_token)
 
         logger.info("*** Model loaded! ***")
+
+        ########################
+        # Initialize the Trainer
+        ########################
+        trainer = SFTTrainer(
+            model=model,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            dataset_text_field="text",
+            max_seq_length=training_args.max_seq_length,
+            tokenizer=tokenizer,
+            packing=data_args.packing,
+        )
     else:
         logger.info("*** Model loaded! ***")
 
@@ -194,20 +208,6 @@ def main():
             packing=data_args.packing,
             peft_config=get_peft_config(model_args),
         )
-
-    ########################
-    # Initialize the Trainer
-    ########################
-    trainer = SFTTrainer(
-        model=model,
-        args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
-        dataset_text_field="text",
-        max_seq_length=training_args.max_seq_length,
-        tokenizer=tokenizer,
-        packing=data_args.packing,
-    )
 
     # try:
     #     import wandb
