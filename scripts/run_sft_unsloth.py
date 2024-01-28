@@ -150,19 +150,20 @@ def main():
             # token=secret_hf,  # use one if using gated models like meta-llama/Llama-2-7b-hf
             device_map={"": torch.cuda.current_device()},
         )
+        print("model_args.lora_target_modules", model_args.lora_target_modules)
         model = FastLanguageModel.get_peft_model(
             model,
             r=model_args.lora_r,  # Choose any number > 0 ! Suggested 8, 16, 32, 64, 128
-            target_modules=model_args.lora_target_modules,
-            # target_modules=[
-            #     "q_proj",
-            #     "k_proj",
-            #     "v_proj",
-            #     "o_proj",
-            #     "gate_proj",
-            #     "up_proj",
-            #     "down_proj",
-            # ],
+            # target_modules=model_args.lora_target_modules,
+            target_modules=[
+                "q_proj",
+                "k_proj",
+                "v_proj",
+                "o_proj",
+                "gate_proj",
+                "up_proj",
+                "down_proj",
+            ],
             lora_alpha=model_args.lora_alpha,
             lora_dropout=model_args.lora_dropout,  # Supports any, but = 0 is optimized
             bias="none",  # Supports any, but = "none" is optimized
