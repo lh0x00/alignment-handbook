@@ -141,6 +141,7 @@ def main():
     )
 
     if model_args.patch_unsloth is True:
+        print("training_args.max_seq_length", training_args.max_seq_length)
         model, tokenizer = FastLanguageModel.from_pretrained(
             model_name=model_args.model_name_or_path,  # "unsloth/mistral-7b" for 16bit loading
             max_seq_length=training_args.max_seq_length,
