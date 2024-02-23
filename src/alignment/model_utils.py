@@ -22,6 +22,7 @@ from transformers.trainer_utils import get_last_checkpoint
 
 from accelerate import Accelerator
 from huggingface_hub import list_repo_files
+from huggingface_hub.utils._errors import RepositoryNotFoundError
 from huggingface_hub.utils._validators import HFValidationError
 from peft import LoraConfig, PeftConfig
 
@@ -39,11 +40,15 @@ def get_kbit_device_map() -> Dict[str, int] | None:
     return {"": get_current_device()} if torch.cuda.is_available() else None
 
 
-def get_quantization_config(model_args) -> BitsAndBytesConfig | None:
+def get_quantization_config(model_args: ModelArguments) -> BitsAndBytesConfig | None:
     if model_args.load_in_4bit:
+        compute_dtype = torch.float16
+        if model_args.torch_dtype not in {"auto", None}:
+            compute_dtype = getattr(torch, model_args.torch_dtype)
+
         quantization_config = BitsAndBytesConfig(
             load_in_4bit=True,
-            bnb_4bit_compute_dtype=torch.float16,  # For consistency with model weights, we use the same value as `torch_dtype` which is float16 for PEFT models
+            bnb_4bit_compute_dtype=compute_dtype,
             bnb_4bit_quant_type=model_args.bnb_4bit_quant_type,
             bnb_4bit_use_double_quant=model_args.use_bnb_nested_quant,
         )
@@ -102,7 +107,7 @@ def is_adapter_model(model_name_or_path: str, revision: str = "main") -> bool:
     try:
         # Try first if model on a Hub repo
         repo_files = list_repo_files(model_name_or_path, revision=revision)
-    except HFValidationError:
+    except (HFValidationError, RepositoryNotFoundError):
         # If not, check local repo
         repo_files = os.listdir(model_name_or_path)
     return "adapter_model.safetensors" in repo_files or "adapter_model.bin" in repo_files
