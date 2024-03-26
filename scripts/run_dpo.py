@@ -37,7 +37,7 @@ from alignment import (
 )
 from peft import PeftConfig, PeftModel
 from trl import DPOTrainer
-
+from unsloth import FastLanguageModel
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +127,44 @@ def main():
     )
 
     model = model_args.model_name_or_path
-    if is_adapter_model(model, model_args.model_revision) is True:
+    if model_args.patch_unsloth is True:
+        print("training_args.max_seq_length", training_args.max_seq_length)
+        model, tokenizer = FastLanguageModel.from_pretrained(
+            model_name=model_args.model_name_or_path,  # "unsloth/mistral-7b" for 16bit loading
+            max_seq_length=training_args.max_seq_length,
+            dtype=model_kwargs.get("torch_dtype"),
+            load_in_4bit=quantization_config.load_in_4bit,
+            load_in_8bit=quantization_config.load_in_8bit,
+            # token=secret_hf,  # use one if using gated models like meta-llama/Llama-2-7b-hf
+            device_map={"": torch.cuda.current_device()},
+        )
+        print("model_args.lora_target_modules", model_args.lora_target_modules)
+        model = FastLanguageModel.get_peft_model(
+            model,
+            r=model_args.lora_r,  # Choose any number > 0 ! Suggested 8, 16, 32, 64, 128
+            # target_modules=model_args.lora_target_modules,
+            target_modules=[
+                "q_proj",
+                "k_proj",
+                "v_proj",
+                "o_proj",
+                "gate_proj",
+                "up_proj",
+                "down_proj",
+            ],
+            lora_alpha=model_args.lora_alpha,
+            lora_dropout=model_args.lora_dropout,  # Supports any, but = 0 is optimized
+            bias="none",  # Supports any, but = "none" is optimized
+            use_gradient_checkpointing=True,
+            random_state=3407,
+            max_seq_length=training_args.max_seq_length,
+        )
+        model_kwargs = None
+
+        tokenizer.padding_side = "right"
+        tokenizer.pad_token = tokenizer.eos_token
+        print(tokenizer.add_bos_token, tokenizer.add_eos_token)
+    elif is_adapter_model(model, model_args.model_revision) is True:
         logger.info(f"Loading SFT adapter for {model_args.model_name_or_path=}")
         peft_config = PeftConfig.from_pretrained(model_args.model_name_or_path, revision=model_args.model_revision)
         model_kwargs = dict(
