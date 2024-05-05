@@ -171,9 +171,11 @@ def main():
     train_dataset = raw_datasets["train"]
     eval_dataset = raw_datasets["test"]
 
+    print(f"Tokenizer chat template:\n{tokenizer.chat_template}\n\n")
+
     for index in random.sample(range(len(raw_datasets["train"])), 5):
         print(
-            f"Sample {index} of the processed training set:\n\n{raw_datasets['train'][index]['text']}"
+            f"Sample {index} of the processed training set:\n{raw_datasets['train'][index]['text']}\n\n"
         )
 
     ########################
