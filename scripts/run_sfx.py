@@ -172,7 +172,7 @@ def main():
     eval_dataset = raw_datasets["test"]
 
     for index in random.sample(range(len(raw_datasets["train"])), 5):
-        logger.info(
+        print(
             f"Sample {index} of the processed training set:\n\n{raw_datasets['train'][index]['text']}"
         )
 
