@@ -107,6 +107,7 @@ def main():
     # Load tokenizer
     ################
     tokenizer = get_tokenizer(model_args, data_args)
+    tokenizer.model_max_length = 131072
 
     #######################
     # Load pretrained model
