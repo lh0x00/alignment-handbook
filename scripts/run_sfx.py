@@ -160,7 +160,7 @@ def main():
     #####################
     # Apply chat template
     #####################
-    raw_datasets = raw_datasets.raw_datasets.filter(
+    raw_datasets = raw_datasets.filter(
         decontaminate_context_over,
         batched=True,
         batch_size=10_000,
