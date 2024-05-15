@@ -109,6 +109,7 @@ def main():
             "prompt",
             "completion",
             "label",
+            "tokens",
         ],
     )
     logger.info(
