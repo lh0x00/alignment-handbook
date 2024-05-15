@@ -25,6 +25,7 @@ import datasets
 import torch
 import transformers
 from transformers import AutoModelForCausalLM, set_seed
+from typing import Any, Dict, List
 
 from alignment import (
     DataArguments,
@@ -44,6 +45,18 @@ from trl import SFTTrainer, setup_chat_format
 
 
 logger = logging.getLogger(__name__)
+
+
+def decontaminate_context_over(
+    samples: List[Dict[str, Any]], max_seq_length: int = 4096
+):
+    output = []
+
+    for tokens in samples["tokens"]:
+        over = tokens > max_seq_length
+        output.append(not over)
+
+    return output
 
 
 def main():
@@ -107,7 +120,7 @@ def main():
     # Load tokenizer
     ################
     tokenizer = get_tokenizer(model_args, data_args)
-    tokenizer.model_max_length = 8192
+    tokenizer.model_max_length = training_args.max_seq_length
 
     #######################
     # Load pretrained model
@@ -142,9 +155,22 @@ def main():
         model, tokenizer = setup_chat_format(model, tokenizer)
         model_kwargs = None
 
+    print("Raw datasets:\n", raw_datasets)
+
     #####################
     # Apply chat template
     #####################
+    raw_datasets = raw_datasets.raw_datasets.filter(
+        decontaminate_context_over,
+        batched=True,
+        batch_size=10_000,
+        num_proc=1,
+        fn_kwargs={
+            "max_seq_length": training_args.max_seq_length,
+        },
+    )
+    print("Raw datasets filtered by 'decontaminate_context_over':\n", raw_datasets)
+
     raw_datasets = raw_datasets.map(
         apply_chat_template,
         fn_kwargs={
@@ -164,6 +190,8 @@ def main():
     raw_datasets = raw_datasets.filter(
         decontaminate_humaneval, batched=True, batch_size=10_000, num_proc=1
     )
+    print("Raw datasets filtered by 'decontaminate_humaneval':\n", raw_datasets)
+
     num_filtered_train_samples = num_raw_train_samples - len(raw_datasets["train"])
     logger.info(
         f"Decontaminated {num_filtered_train_samples} ({num_filtered_train_samples/num_raw_train_samples * 100:.2f}%) samples from the training set."
@@ -174,7 +202,7 @@ def main():
 
     print(f"Tokenizer chat template:\n{tokenizer.chat_template}\n\n")
 
-    for index in random.sample(range(len(raw_datasets["train"])), 5):
+    for index in random.sample(range(len(raw_datasets["train"])), 10):
         print(
             f"Sample {index} of the processed training set:\n{raw_datasets['train'][index]['text']}\n\n"
         )
